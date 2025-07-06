@@ -1,4 +1,4 @@
-#!/run/current-system/sw/bin/bash
+#!/usr/bin/env bash
 # unified-test-runner.sh - Unified test runner for TRAMP Supernote
 
 # Change to the supernote-tramp directory
