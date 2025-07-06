@@ -2,6 +2,15 @@
 
 A TRAMP (Transparent Remote Access, Multiple Protocol) method for accessing Supernote devices via HTTP.
 
+> [!IMPORTANT]
+> **Author's Note**: The entirety of this package was vibe-coded using GitHub Copilot's agent mode against
+> my Supernote A6 X2 Nomad (wifi via Browse & Access). It's functionally sufficient for my once-a-few-months use. I
+> don't plan on making this a maintained package, so feel free to fork and use this however you'd like. I've included
+> the Copilot summary reports in docs; they're unfortunately unordered. Take all other text and code outside this
+> author's note with a grain of salt.
+>
+> I've only tested it on my device, a Supernote A6 X2 Nomad, Emacs 30.1, NixOS 25.05.
+
 ## Installation
 
 The package is already installed and configured in your Emacs setup.
@@ -93,4 +102,4 @@ tramp-supernote/
 
 ## License
 
-This package follows standard Emacs package licensing practices.
+MIT
