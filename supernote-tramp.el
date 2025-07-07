@@ -72,9 +72,14 @@ When exceeded, oldest entries are removed first."
 (defconst supernote-tramp-method "supernote"
   "Method to connect to Supernote devices via WiFi.")
 
+;; Forward declaration
+(declare-function supernote-tramp-handle-copy-directory "supernote-tramp")
+(declare-function supernote-tramp-copy-directory-recursively "supernote-tramp")
+
 (defconst supernote-tramp-file-name-handler-alist
   '((access-file . ignore)
     (add-name-to-file . tramp-handle-add-name-to-file)
+    (copy-directory . supernote-tramp-handle-copy-directory)
     (copy-file . supernote-tramp-handle-copy-file)
     (delete-directory . supernote-tramp-handle-delete-directory)
     (delete-file . supernote-tramp-handle-delete-file)
@@ -640,6 +645,67 @@ For Supernote, directories are executable (for navigation) but files are not."
       (let ((local-copy (supernote-tramp-handle-file-local-copy filename)))
         (copy-file local-copy newname ok-if-already-exists keep-date preserve-uid-gid preserve-extended-attributes)
         (delete-file local-copy)))))
+
+(defun supernote-tramp-handle-copy-directory (dirname newname &optional keep-date parents copy-contents)
+  "Copy directory from Supernote to local system recursively."
+  (let ((parsed (tramp-dissect-file-name dirname))
+        (parsed-new (ignore-errors (tramp-dissect-file-name newname))))
+    (if (and parsed-new (tramp-file-name-method parsed-new))
+        ;; Trying to copy to another remote location
+        (tramp-error parsed 'file-error
+                     "Cannot copy to remote location - Supernote filesystem is read-only")
+      ;; Copy from Supernote to local directory
+      (supernote-tramp-copy-directory-recursively dirname newname keep-date parents copy-contents))))
+
+(defun supernote-tramp-copy-directory-recursively (dirname newname &optional keep-date parents copy-contents)
+  "Recursively copy directory contents from Supernote to local filesystem.
+DIRNAME is the source directory on Supernote.
+NEWNAME is the destination directory on local filesystem.
+KEEP-DATE, PARENTS, and COPY-CONTENTS are options for the copy operation."
+  (let* ((vec (tramp-dissect-file-name dirname))
+         (path (tramp-file-name-localname vec))
+         ;; Normalize path by removing trailing slash
+         (normalized-path (if (and (> (length path) 1) (string-suffix-p "/" path))
+                             (substring path 0 -1)
+                           path))
+         (source-base-name (file-name-nondirectory normalized-path))
+         (dest-dir (if copy-contents
+                      newname
+                    (file-name-as-directory (expand-file-name source-base-name newname)))))
+    
+    ;; Create destination directory if it doesn't exist
+    (unless (file-exists-p dest-dir)
+      (if parents
+          (make-directory dest-dir t)
+        (make-directory dest-dir)))
+    
+    ;; Get file list from the source directory
+    (let ((file-list (supernote-tramp-get-file-list vec normalized-path)))
+      (when (assoc 'fileList file-list)
+        (dolist (file (cdr (assoc 'fileList file-list)))
+          (let* ((file-name (cdr (assoc 'name file)))
+                 (is-directory (eq (cdr (assoc 'isDirectory file)) t))
+                 (source-file (tramp-make-tramp-file-name
+                              (tramp-file-name-method vec)
+                              (tramp-file-name-user vec)
+                              (tramp-file-name-domain vec)
+                              (tramp-file-name-host vec)
+                              (tramp-file-name-port vec)
+                              (concat normalized-path "/" file-name)))
+                 (dest-file (expand-file-name file-name dest-dir)))
+            
+            (if is-directory
+                ;; Recursively copy subdirectory
+                (progn
+                  ;; Create the destination directory
+                  (unless (file-exists-p dest-file)
+                    (make-directory dest-file t))
+                  ;; Copy contents into the created directory
+                  (supernote-tramp-copy-directory-recursively source-file dest-file keep-date t t))
+              ;; Copy regular file
+              (let ((local-copy (supernote-tramp-handle-file-local-copy source-file)))
+                (copy-file local-copy dest-file nil keep-date nil nil)
+                (delete-file local-copy)))))))))
 
 ;;;###autoload
 (defun supernote-tramp-file-name-p (vec-or-filename)
