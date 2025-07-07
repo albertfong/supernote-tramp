@@ -27,7 +27,7 @@ TEST_CONFIGS[error-handling]="ert_test|Error Handling Tests|emacs --batch -l sup
 TEST_CONFIGS[cache-management]="ert_test|Cache Management Tests|emacs --batch -l supernote-tramp.el -l tests/test-cache-management-ert.el -f ert-run-tests-batch-and-exit"
 
 # Integration tests (require live server, all ERT tests)
-TEST_CATEGORIES[integration]="readonly-ert dired-ert comprehensive-readonly-ert caching-performance-ert integration-basic copy-directory-tests dired-integration-test"
+TEST_CATEGORIES[integration]="readonly-ert dired-ert comprehensive-readonly-ert caching-performance-ert integration-basic copy-directory-tests dired-integration-test dired-mark-copy-test"
 TEST_CONFIGS[readonly-ert]="ert_test|Read-Only Operations|cd tests/tramp && timeout 60 emacs --batch -l ../../supernote-tramp.el -l test-readonly-and-copy-ert.el -f ert-run-tests-batch-and-exit"
 TEST_CONFIGS[dired-ert]="ert_test|Dired Integration|cd tests/dired && timeout 60 emacs --batch -l ../../supernote-tramp.el -l test-dired-functionality-ert.el -f ert-run-tests-batch-and-exit"
 TEST_CONFIGS[comprehensive-readonly-ert]="ert_test|Comprehensive Read-Only Tests|cd tests/tramp && timeout 60 emacs --batch -l ../../supernote-tramp.el -l test-comprehensive-readonly-ert.el -f ert-run-tests-batch-and-exit"
@@ -35,6 +35,7 @@ TEST_CONFIGS[caching-performance-ert]="ert_test|Caching Performance Tests|cd tes
 TEST_CONFIGS[integration-basic]="ert_test|Integration Tests|cd tests/integration && timeout 30 emacs --batch -l ../../supernote-tramp.el -l test-supernote-tramp-integration.el -f ert-run-tests-batch-and-exit"
 TEST_CONFIGS[copy-directory-tests]="ert_test|Directory Copy Tests|timeout 90 emacs --batch -l supernote-tramp.el -l tests/test-copy-directory.el -f ert-run-tests-batch-and-exit"
 TEST_CONFIGS[dired-integration-test]="ert_test|Dired Copy Integration|timeout 60 emacs --batch -l supernote-tramp.el -l tests/test-dired-integration.el -f ert-run-tests-batch-and-exit"
+TEST_CONFIGS[dired-mark-copy-test]="ert_test|Dired Mark and Copy Tests|timeout 60 emacs --batch -l supernote-tramp.el -l tests/test-dired-mark-copy.el -f ert-run-tests-batch-and-exit"
 
 # Function to run a test
 run_test() {

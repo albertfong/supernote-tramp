@@ -635,9 +635,9 @@ For Supernote, directories are executable (for navigation) but files are not."
 
 (defun supernote-tramp-handle-copy-file (filename newname &optional ok-if-already-exists keep-date preserve-uid-gid preserve-extended-attributes)
   "Copy file from Supernote to local system only."
-  (let ((parsed (tramp-dissect-file-name filename))
-        (parsed-new (ignore-errors (tramp-dissect-file-name newname))))
-    (if (and parsed-new (tramp-file-name-method parsed-new))
+  (let ((parsed (tramp-dissect-file-name filename)))
+    ;; Check if destination is a TRAMP file name without generating warnings
+    (if (tramp-tramp-file-p newname)
         ;; Trying to copy to another remote location
         (tramp-error parsed 'file-error
                      "Cannot copy to remote location - Supernote filesystem is read-only")
@@ -648,9 +648,9 @@ For Supernote, directories are executable (for navigation) but files are not."
 
 (defun supernote-tramp-handle-copy-directory (dirname newname &optional keep-date parents copy-contents)
   "Copy directory from Supernote to local system recursively."
-  (let ((parsed (tramp-dissect-file-name dirname))
-        (parsed-new (ignore-errors (tramp-dissect-file-name newname))))
-    (if (and parsed-new (tramp-file-name-method parsed-new))
+  (let ((parsed (tramp-dissect-file-name dirname)))
+    ;; Check if destination is a TRAMP file name without generating warnings
+    (if (tramp-tramp-file-p newname)
         ;; Trying to copy to another remote location
         (tramp-error parsed 'file-error
                      "Cannot copy to remote location - Supernote filesystem is read-only")
@@ -671,7 +671,15 @@ KEEP-DATE, PARENTS, and COPY-CONTENTS are options for the copy operation."
          (source-base-name (file-name-nondirectory normalized-path))
          (dest-dir (if copy-contents
                       newname
-                    (file-name-as-directory (expand-file-name source-base-name newname)))))
+                    (let* ((source-base-name-with-slash (concat "/" source-base-name))
+                           (newname-normalized (if (string-suffix-p "/" newname)
+                                                  (substring newname 0 -1)
+                                                newname)))
+                      ;; Check if newname already ends with the source directory name
+                      ;; This happens when dired pre-calculates the destination
+                      (if (string-suffix-p source-base-name-with-slash newname-normalized)
+                          (file-name-as-directory newname)
+                        (file-name-as-directory (expand-file-name source-base-name newname)))))))
     
     ;; Create destination directory if it doesn't exist
     (unless (file-exists-p dest-dir)
